@@ -1,0 +1,38 @@
+on: [push]
+
+jobs:
+  zippy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: 'release.zip'
+    - uses: actions/upload-artifact@master
+      with:
+        name: my-zip
+        path: release.zip
+
+  copy:
+      needs: zippy
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@master
+        with:
+          name: my-zip
+          path: release.zip
+      - name: Pushes test file
+        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }} #this is the access token or the deployment repo, set as a secret for this project
+        with:
+          source_file: '/github/workspace/release.zip' #keep this as is, the name of the zip is necessary for AV checks
+          destination_repo: 'css123001/SHdeploy' #private repo which performs AV and uplaoding to SH
+          destination_folder: 'SHuser1-Dir' #change this to the name of your project
+          destination_branch: 'main' #ensure the main branch of your project is called 'main', NOT 'master'
+          user_email: 'csword001@dundee.ac.uk' #your email address, the one used for your Git account
+          user_name: 'css123001' #your git username
